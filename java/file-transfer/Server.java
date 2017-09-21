@@ -59,7 +59,7 @@ public class Server extends Thread {
 	/**
 	 * Constructor
 	 */
-	public server(String initialPort) {
+	public Server(String initialPort) {
 		// Validate port
 		if (validatePort(initialPort) == false) {
 			err.println("Invalid port ... Terminate program! Try again.");
