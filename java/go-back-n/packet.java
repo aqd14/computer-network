@@ -1,16 +1,14 @@
-// Author: Maxwell Young
-// Date: Feb 1, 2016
 
-public class Packet implements java.io.Serializable {
+
+public class packet implements java.io.Serializable {
     // Attributes
-    private static final long serialVersionUID = 1L;
     private int type; // 0 if an ACK, 1 if a data packet
     private int seqnum; // sequence number
     private int length; // number of characters carried in data field
     private String data; // should be 0 for ACK packets
 
     // constructor
-    public Packet(int t, int s, int l, String d) {
+    public packet(int t, int s, int l, String d) {
         type = t;
         seqnum = s;
         length = l;
