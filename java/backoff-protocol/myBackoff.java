@@ -33,7 +33,7 @@ public class myBackoff {
     }
     
     public void runSimulation(int numWindows) throws IOException {
-        // Linear backoff protocol simulation
+    	// Linear backoff protocol simulation
         PrintWriter linearBackoffWriter = new PrintWriter(new FileWriter("linearLatency.txt", false), true);
         LinearBackoff linearBackoffProtocol = new LinearBackoff();
         transmit(linearBackoffProtocol, linearBackoffWriter);
@@ -83,45 +83,45 @@ public class myBackoff {
             assert false;
         }
         
-        while(true) {
-            Window initialWindow = new Window(initialWindowSize);
-            Window curWindow = initialWindow;
-            int desiredSlot; // The slot that current machine transmits
-            
-//            System.out.println("Maximum testing device = " + maximumTestingDevicesForCurrentTrial);
-            for (int device = 1; device <= maximumTestingDevicesForCurrentTrial;) {
-                desiredSlot = curWindow.getRandomSlotWithinWindow();
-                if (curWindow.isSlotTaken(desiredSlot)) { // Collision occurred
-                    totalLatency += curWindow.getNumSlots();
-                    curWindow = bp.nextWindow(curWindow);
-                } else { // Slot is available. Next device can start transmitting
-                    curWindow.markSlotTaken(desiredSlot);
-                    device++;
-                }
-                // Finish a simulation
-                // Start next trial
-                if (device > maximumTestingDevicesForCurrentTrial) {
-//                    System.out.println("Repeatition = " + repeatition);
-//                    System.out.println("Number of device = " + device);
-                    if (repeatition < MAXIMUM_REPEATITION_FOR_EACH_SIMULATION) {
-                        totalLatency += desiredSlot;
-                        repeatition++;
-                    } else {
-//                        System.out.println("[Repetition " + repeatition + "]" + " Total latency = " + totalLatency);
-                        writer.println((double) totalLatency / MAXIMUM_REPEATITION_FOR_EACH_SIMULATION);
-                        // Prepare for next trial
-                        maximumTestingDevicesForCurrentTrial += 100;
-                        repeatition = 1;
-                        totalLatency = 0;
-                        if (maximumTestingDevicesForCurrentTrial > numDevices) {
-                            System.out.println("----- ENDING SIMULATION ----- \n");
-                            System.out.println("--------------------------------- \n");
-                            return;
-                        }
-                    }
-                    break;
-                }
-            }
+        Window curWindow = new Window(initialWindowSize);
+        int device = 1;
+        int totalSentDevices = 0;
+        while (true) {
+        	for (; device <= maximumTestingDevicesForCurrentTrial; device++) {
+        		curWindow.takeRandomSlotWithinWindow();
+        	}
+        	
+        	int succesfullySentDevices = curWindow.getEligibleSlots();
+        	totalSentDevices += succesfullySentDevices;
+        	totalLatency += curWindow.getLargestTakenSlot();
+        	
+        	// All devices transmitted packages in current trial
+        	if (totalSentDevices >= maximumTestingDevicesForCurrentTrial) {
+        		if (repeatition <= MAXIMUM_REPEATITION_FOR_EACH_SIMULATION) {
+        			repeatition++;
+        		} else {
+        			double averageLatency = totalLatency / MAXIMUM_REPEATITION_FOR_EACH_SIMULATION;
+//        			System.out.println("\nTotal latency = " + totalLatency);
+//        			System.out.println("Average latency = " + averageLatency);
+        			writer.println(averageLatency);
+        			repeatition = 1;
+        			totalLatency = 0;
+        			maximumTestingDevicesForCurrentTrial += 100;
+        			if (maximumTestingDevicesForCurrentTrial > numDevices) {
+                        System.out.println("----- ENDING SIMULATION ----- \n");
+                        System.out.println("--------------------------------- \n");
+        				return;
+        			}
+        		}
+        		
+        		// Start new simulation
+        		curWindow = new Window(initialWindowSize);
+        		device = 1;
+    			totalSentDevices = 0;
+        	} else { // Need to use next window for transmitting
+        		device = totalSentDevices + 1;
+        		curWindow = bp.nextWindow(curWindow);
+        	}
         }
     }
     
